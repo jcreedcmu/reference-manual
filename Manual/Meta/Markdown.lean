@@ -37,3 +37,44 @@ def markdown : PartCommand
      for block in ast.blocks do
        currentHeaderLevels ← Markdown.addPartFromMarkdown block currentHeaderLevels
   | _ => Elab.throwUnsupportedSyntax
+
+
+def mdexample := r#"
+# header1
+## header2-a
+### header3-aa
+### header3-ab
+## header2-b
+### header3-ba
+### header3-bb
+## header2-c
+### header3-ca
+### header3-cb
+"#
+
+def debug : Verso.Doc.Elab.FinishedPart → String
+  | .mk _ _ title _ _ subParts _ =>
+       let partsStr : String := subParts.map debug |>.toList |> " ".intercalate
+       s!"({title} {partsStr})"
+  | .included name => s!"included {name}"
+
+elab "#doctest" "(" genre:term ")" : command => open Lean Elab Command PartElabM DocElabM in do
+  Concrete.findGenreCmd genre
+
+  let title ← `(str|"fake title")
+  let titleParts ← Concrete.stringToInlines title
+  let g ← runTermElabM fun _ => Lean.Elab.Term.elabTerm genre (some (.const ``Doc.Genre []))
+
+  let some ast := MD4Lean.parse mdexample
+    | panic! "unit test failure"
+
+  let ((), _dst, pst) ← liftTermElabM <| PartElabM.run genre g {} (.init (.node .none nullKind titleParts)) <| do
+    let mut currentHeaderLevels : List (Nat × Nat) := []
+    for block in ast.blocks do
+      currentHeaderLevels ← Markdown.addPartFromMarkdown block currentHeaderLevels
+    closePartsUntil 0 0
+
+  IO.println (repr <| pst.partContext.priorParts.map debug)
+
+
+#doctest (Manual)
