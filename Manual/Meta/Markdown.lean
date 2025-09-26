@@ -81,3 +81,40 @@ elab "#doctest" "(" genre:term ")" : command => open Lean Elab Command PartElabM
 #doctest (Manual)
 
 end debug
+
+
+/--
+Something something something.
+
+# Here's an h1
+## Here's an h2
+## Here's a second consecutive h2
+## Here's a third consecutive h2
+
+# Examples
+
+## Necessarily noncomputable function not appropriately marked
+
+```lean broken
+axiom transform : Nat → Nat
+
+def transformIfZero : Nat → Nat
+  | 0 => transform 0
+  | n => n
+```
+```output
+axiom 'transform' not supported by code generator; consider marking definition as 'noncomputable'
+```
+```lean fixed
+axiom transform : Nat → Nat
+
+noncomputable def transformIfZero : Nat → Nat
+  | 0 => transform 0
+  | n => n
+```
+
+-/
+register_error_explanation lean.thisIsADebuggingErrorExplanation {
+  summary := "Made up summary"
+  sinceVersion := "4.22.0"
+}
