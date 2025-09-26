@@ -33,88 +33,46 @@ def markdown : PartCommand
   | `(Lean.Doc.Syntax.codeblock| ``` markdown | $txt ``` ) => do
      let some ast := MD4Lean.parse txt.getString
        | throwError "Failed to parse body of markdown code block"
-     let mut currentHeaderLevels : List (Nat × Nat) := []
+     let mut currentHeaderLevels : List Nat := []
      for block in ast.blocks do
        currentHeaderLevels ← Markdown.addPartFromMarkdown block currentHeaderLevels
   | _ => Elab.throwUnsupportedSyntax
 
-namespace debug
-def mdexample := r#"
-# header1
-## header2-a
-### header3-aa
-### header3-ab
-### header3-ac
-## header2-b
-### header3-ba
-### header3-bb
-## header2-c
-### header3-ca
-### header3-cb
-"#
+-- namespace debug
+-- def mdexample := r#"
+-- # header1
+-- ## header2-a
+-- ##### header3-ab
+-- ### something
+-- ### something else
+-- # new
+-- ## new
+-- "#
 
-def debug : Verso.Doc.Elab.FinishedPart → String
-  | .mk _ _ title _ _ subParts _ =>
-       let partsStr : String := subParts.map debug |>.toList |> " ".intercalate
-       s!"({title} {partsStr})"
-  | .included name => s!"included {name}"
+-- def debug : Verso.Doc.Elab.FinishedPart → String
+--   | .mk _ _ title _ _ subParts _ =>
+--        let partsStr : String := subParts.map debug |>.toList |> " ".intercalate
+--        s!"({title} {partsStr})"
+--   | .included name => s!"included {name}"
 
 
-elab "#doctest" "(" genre:term ")" : command => open Lean Elab Command PartElabM DocElabM in do
-  Concrete.findGenreCmd genre
+-- elab "#doctest" "(" genre:term ")" : command => open Lean Elab Command PartElabM DocElabM in do
+--   Concrete.findGenreCmd genre
 
-  let g ← runTermElabM fun _ => Lean.Elab.Term.elabTerm genre (some (.const ``Doc.Genre []))
+--   let g ← runTermElabM fun _ => Lean.Elab.Term.elabTerm genre (some (.const ``Doc.Genre []))
 
-  let some ast := MD4Lean.parse mdexample
-    | panic! "unit test failure"
+--   let some ast := MD4Lean.parse mdexample
+--     | panic! "unit test failure"
 
-  let ((), _dst, pst) ← liftTermElabM <| PartElabM.run genre g {} (.init (.node .none nullKind #[])) <| do
-    let mut currentHeaderLevels : List (Nat × Nat) := []
-    for block in ast.blocks do
-      IO.println currentHeaderLevels
-      currentHeaderLevels ← Markdown.addPartFromMarkdown block currentHeaderLevels
-    closePartsUntil 0 0
+--   let ((), _dst, pst) ← liftTermElabM <| PartElabM.run genre g {} (.init (.node .none nullKind #[])) <| do
+--     let mut currentHeaderLevels : List Nat := []
+--     for block in ast.blocks do
+--       currentHeaderLevels ← Markdown.addPartFromMarkdown block currentHeaderLevels
+--     closePartsUntil 0 0
 
-  IO.println (repr <| pst.partContext.priorParts.map debug)
-
-
-#doctest (Manual)
-
-end debug
+--   IO.println (repr <| pst.partContext.priorParts.map debug)
 
 
-/--
-Something something something.
+-- #doctest (Manual)
 
-# Here's an h1
-## Here's an h2
-## Here's a second consecutive h2
-## Here's a third consecutive h2
-
-# Examples
-
-## Necessarily noncomputable function not appropriately marked
-
-```lean broken
-axiom transform : Nat → Nat
-
-def transformIfZero : Nat → Nat
-  | 0 => transform 0
-  | n => n
-```
-```output
-axiom 'transform' not supported by code generator; consider marking definition as 'noncomputable'
-```
-```lean fixed
-axiom transform : Nat → Nat
-
-noncomputable def transformIfZero : Nat → Nat
-  | 0 => transform 0
-  | n => n
-```
-
--/
-register_error_explanation lean.thisIsADebuggingErrorExplanation {
-  summary := "Made up summary"
-  sinceVersion := "4.22.0"
-}
+-- end debug
