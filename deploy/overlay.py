@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+import argparse
+import os
+from release_utils import run_git_command, is_git_ancestor
+
+def apply_overlays():
+    """
+    Apply desired overlays inside current directory.
+    """
+    with open('latest/version.js', 'a') as file:
+      file.write('window.version = "latest"\n')
+    with open('stable/version.js', 'a') as file:
+      file.write('window.version = "stable"\n')
+
+def deploy_overlays(deploy_dir, src_branch, tgt_branch):
+    """
+    Apply desired overlays inside deploy_dir
+    Args:
+        deploy_dir (str): Directory that contains all versions of the manual.
+        This is the content we expect to find at branch `predeploy`, and
+        this function modifies it in place to produce a repository state
+        suitable for committing to branch `deploy`.
+        src_branch (str): Git branch to apply overlays to
+        tgt_branch (str): Git branch to commit to
+    """
+    os.chdir(deploy_dir)
+    # Save current git commit to restore later
+    current_branch = run_git_command(["git", "branch", "--show-current"])
+    try:
+        if is_git_ancestor(tgt_branch, src_branch):
+          raise Exception(f"Git merge will have bad behavior if {tgt_branch} is an ancestor of {src_branch}, try creating a vacuous commit on {tgt_branch} first.")
+        run_git_command(["git", "switch", src_branch])
+        print(f"Applying overlays...")
+        apply_overlays()
+        print(f"Creating merge commit...")
+        run_git_command(["git", "add", "."])
+        # We create the overlay commit based on src_branch ('predeploy')...
+        run_git_command(["git", "commit", "-m", "overlay.py: apply overlays"])
+        # ...but we actually want to add it to the history of
+        # tgt_branch ('deploy'). This is the moment when it is problematic
+        # for tgt_branch to be an ancestor of src_branch, because then this
+        # will be a no-op, despite --no-ff.
+        #
+        # All of this complication is due to the fact that "-s theirs" doesn't
+        # exist and "-X theirs" isn't what we want.
+        # (see https://stackoverflow.com/questions/4911794/git-command-for-making-one-branch-like-another/4912267#4912267 for context)
+        run_git_command(["git", "merge", "--no-ff", "--no-edit", "-s",  "ours", tgt_branch])
+        run_git_command(["git", "switch", tgt_branch])
+        run_git_command(["git", "reset", "--hard", src_branch])
+        run_git_command(["git", "switch", src_branch])
+        # Rewind the predeploy branch back past the merge commit and the
+        # overlay commit. This cleanup probably isn't strictly necessary,
+        # since we don't expect our GH Actions caller script to push
+        # predeploy, but we might as well clean up after ourselves
+        # just in case.
+        run_git_command(["git", "reset", "--hard", "HEAD^^"])
+    finally:
+        run_git_command(["git", "switch", current_branch])
+
+def main():
+    parser = argparse.ArgumentParser(description="Applies overlays to a manual predeployment branch")
+    parser.add_argument("deploy_dir", help="Directory to operate on")
+    parser.add_argument("src_branch", help="Git branch to apply overlays to")
+    parser.add_argument("tgt_branch", help="Git branch to commit to")
+
+    args = parser.parse_args()
+
+    print(f"Applying overlays to directory {args.deploy_dir} branch {args.src_branch} to produce {args.tgt_branch}")
+
+    deploy_overlays(args.deploy_dir, args.src_branch, args.tgt_branch)
+
+if __name__ == "__main__":
+    main()

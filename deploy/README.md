@@ -17,16 +17,27 @@ The files are:
 
 * `prep.sh` is used to set up the build, installing OS-level
   dependencies and Elan.
-  
+
 * `build.sh` is used to build the executable that generates the
   manual.
-  
+
 * `generate.sh` actually generates release-ready HTML, saving it in
   `/html` in the root of this repository.
-  
-* `release.py` puts the generated HTML in the right place on the
-  deployment branch.
-  
+
+* `release.py` puts the generated HTML in the right place on a new commit
+  on the branch `predeploy`
+
+Everything above is what needs to happen specifically to the single version
+of the documentation that is being updated in the course of the deploy.
+There is one further step, which is computing the desired state
+of the final `deploy` branch from the state in the branch `predeploy`.
+This is done by the script `overlay.py`, which is run at branch `main`
+rather than at the tag being pushed. This is because the overlay
+edits are ephemeral modifications to the raw historical content
+of old versions of the manual, e.g. retroactive css modifications,
+or injections into the `<head>` tag that allow recent versions
+to know within their javascript contets that they *are* recent.
+
 ## Deployment Overview
 
 The goal is to have versioned snapshots of the manual, with a structure like:
@@ -34,7 +45,7 @@ The goal is to have versioned snapshots of the manual, with a structure like:
  * `https://lean-lang.org/doc/reference/latest/`- latest version
  * `https://lean-lang.org/doc/reference/4.19.0/` - manual for v4.19.0
  * `https://lean-lang.org/doc/reference/4.20.0/` - manual for v4.19.0
- 
+
 and so forth.  `https://lean-lang.org/doc/reference/` should redirect
 to `latest`. It's important to be able to edit past deployments as well.
 
@@ -42,8 +53,8 @@ An orphan branch, called `deploy`, should at all times contain this
 structure. With the three URLs above, the branch would contain three
 directories:
 
- * `/4.20.0/` - built HTML served for 4.20.0 
- * `/4.19.0/` - built HTML served for 4.19.0 
+ * `/4.20.0/` - built HTML served for 4.20.0
+ * `/4.19.0/` - built HTML served for 4.19.0
  * `/latest` - symlink to `/4.20.0`
 
 The `release.py` script is responsible for updating this structure. It
@@ -55,11 +66,17 @@ deployment branch name as arguments, and then does the following:
     version, with all numbered releases being considered more recent
     than any nightly and real releases being more recent than their
     RCs.
- 3. It commits the changes to the deployment branch, then switches
+ 3. It commits the changes to the branch `predeploy`, then switches
     back to the original branch.
 
-After this, the GH Action for deployment pushes the edited deploy
+In GH Actions, we push the `predeploy` branch, to serve as a
+convenient forensic record of the history of our documentation
+*without* overlays.
+
+The `overlay.py` script is then responsible for creating a new commit
+to `deploy`, based on `predeploy`. This commit includes all desired
+overlays.
+
+After this, the GH Action for deployment pushes the edited `deploy`
 branch. Another action is responsible for actually deploying the
 contents of this branch when it's pushed.
-
-## 
