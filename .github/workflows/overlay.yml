@@ -1,0 +1,45 @@
+name: Apply Overlays
+
+on:
+  workflow_run:
+    workflows: ["Predeploy Tagged Version"]
+    types:
+      - completed
+
+  push:
+    branches:
+      - 'predeploy'
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # This allows pushing to the repository
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all tags and branches
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Configure Git
+        # These values are recommended at:
+        #   https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Run overlay script
+        run: |
+          echo "Adding overlays to predeploy"
+          python deploy/overlay.py . predeploy deploy
+
+      - name: Push deploy branch
+        run: |
+          git push origin deploy

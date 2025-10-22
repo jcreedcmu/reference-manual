@@ -1,7 +1,7 @@
 name: "Deploy the 'deploy' branch"
 on:
   workflow_run:
-    workflows: ["Deploy Tagged Version"]
+    workflows: ["Apply Overlays"]
     types:
       - completed
 

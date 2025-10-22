@@ -50,8 +50,8 @@ def deploy_overlays(deploy_dir, src_branch, tgt_branch):
         run_git_command(["git", "switch", src_branch])
         # Rewind the predeploy branch back past the merge commit and the
         # overlay commit. This cleanup probably isn't strictly necessary,
-        # since we don't expect our GH Actions caller script to push
-        # predeploy, but we might as well clean up after ourselves
+        # since we don't expect our GH Actions caller script to push the
+        # predeploy branch, but we might as well clean up after ourselves
         # just in case.
         run_git_command(["git", "reset", "--hard", "HEAD^^"])
     finally:
