@@ -2,7 +2,7 @@ name: Apply Overlays
 
 on:
   workflow_run:
-    workflows: ["Predeploy Tagged Version"]
+    workflows: ["Deploy Tagged Version"]
     types:
       - completed
 

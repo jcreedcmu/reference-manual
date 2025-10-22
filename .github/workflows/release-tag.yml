@@ -1,4 +1,4 @@
-name: Predeploy Tagged Version
+name: Deploy Tagged Version
 
 on:
   push:
