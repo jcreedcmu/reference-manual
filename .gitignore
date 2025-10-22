@@ -11,4 +11,3 @@ figures/*.aux
 /figures/*.svg
 /figures/auto/
 venv
-**/__pycache__/
