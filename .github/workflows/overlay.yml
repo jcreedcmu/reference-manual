@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  apply-overlays:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # This allows pushing to the repository
@@ -34,6 +34,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git branch -v -a # XXX FOR DEBUGGING REMOVE ME
 
       - name: Run overlay script
         run: |
