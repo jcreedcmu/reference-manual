@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch all history for all tags and branches
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,6 +32,8 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin predeploy:predeploy
+          git fetch origin deploy:deploy
           git branch -v -a # XXX FOR DEBUGGING REMOVE ME
 
       - name: Run overlay script
