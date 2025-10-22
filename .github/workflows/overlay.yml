@@ -8,7 +8,7 @@ on:
 
   push:
     branches:
-      - 'predeploy'
+      - 'deploy'
 
   workflow_dispatch:
 
@@ -32,15 +32,15 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin predeploy:predeploy
           git fetch origin deploy:deploy
+          git fetch origin postdeploy:postdeploy
 
       - name: Run overlay script
         run: |
           echo "Adding overlays to predeploy"
           # -B to prevent creation of __pycache__ directory
           # which would get committed due to lack of .gitignore
-          python -B deploy/overlay.py . predeploy deploy
+          python -B deploy/overlay.py . deploy postdeploy
 
       - name: Push deploy branch
         run: |

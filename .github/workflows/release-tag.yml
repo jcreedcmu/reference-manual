@@ -107,11 +107,11 @@ jobs:
         run: |
           # The tag name is simply GITHUB_REF_NAME
           TAG_NAME=$GITHUB_REF_NAME
-          echo "Making predeployment from tag: '$TAG_NAME'"
+          echo "Making deployment from tag: '$TAG_NAME'"
 
 
-          python deploy/release.py html/html-multi "$VERSION" predeploy
+          python deploy/release.py html/html-multi "$VERSION" deploy
 
-      - name: Push predeploy branch
+      - name: Push deploy branch
         run: |
-          git push origin predeploy
+          git push origin deploy
