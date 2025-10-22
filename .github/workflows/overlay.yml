@@ -44,4 +44,4 @@ jobs:
 
       - name: Push deploy branch
         run: |
-          git push origin deploy
+          git push origin postdeploy
