@@ -44,7 +44,7 @@ def deploy_overlays(deploy_dir, src_branch, tgt_branch):
         # All of this complication is due to the fact that "-s theirs" doesn't
         # exist and "-X theirs" isn't what we want.
         # (see https://stackoverflow.com/questions/4911794/git-command-for-making-one-branch-like-another/4912267#4912267 for context)
-        run_git_command(["git", "merge", "--no-ff", "--no-edit", "-s",  "ours", tgt_branch])
+        run_git_command(["git", "merge", "-m", "\"merge overlays into deploy\"", "--no-ff", "--no-edit", "-s",  "ours", tgt_branch])
         run_git_command(["git", "switch", tgt_branch])
         run_git_command(["git", "reset", "--hard", src_branch])
         run_git_command(["git", "switch", src_branch])
